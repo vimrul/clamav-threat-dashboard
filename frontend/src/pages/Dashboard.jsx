@@ -1,36 +1,39 @@
-import { useState, useEffect } from 'react';
-import { FaShieldAlt } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { FaShieldAlt } from "react-icons/fa";
+import DarkModeToggle from "../components/DarkModeToggle";
 
 const mockReports = [
   {
     id: 1,
-    vm_name: 'vm-001',
-    timestamp: '2025-04-09T17:00:00Z',
-    report: 'Found 2 infected files: /home/test/eicar.com, /var/www/html/malware.js',
+    vm_name: "vm-001",
+    timestamp: "2025-04-09T17:00:00Z",
+    report:
+      "Found 2 infected files: /home/test/eicar.com, /var/www/html/malware.js",
   },
   {
     id: 2,
-    vm_name: 'vm-002',
-    timestamp: '2025-04-09T17:30:00Z',
-    report: 'No threats found.',
+    vm_name: "vm-002",
+    timestamp: "2025-04-09T17:30:00Z",
+    report: "No threats found.",
   },
   {
     id: 3,
-    vm_name: 'vm-003',
-    timestamp: '2025-04-09T18:00:00Z',
-    report: 'Found 1 infected file: /tmp/trojan.py',
+    vm_name: "vm-003",
+    timestamp: "2025-04-09T18:00:00Z",
+    report: "Found 1 infected file: /tmp/trojan.py",
   },
   {
     id: 4,
-    vm_name: 'vm-004',
-    timestamp: '2025-04-09T18:30:00Z',
-    report: 'No threats found.',
+    vm_name: "vm-004",
+    timestamp: "2025-04-09T18:30:00Z",
+    report: "No threats found.",
   },
   {
     id: 5,
-    vm_name: 'vm-005',
-    timestamp: '2025-04-09T19:00:00Z',
-    report: 'Found 3 infected files: /root/badfile, /home/mal.py, /opt/keylogger.sh',
+    vm_name: "vm-005",
+    timestamp: "2025-04-09T19:00:00Z",
+    report:
+      "Found 3 infected files: /root/badfile, /home/mal.py, /opt/keylogger.sh",
   },
 ];
 
@@ -46,13 +49,20 @@ export default function Dashboard() {
   }, []);
 
   const totalPages = Math.ceil(reports.length / ITEMS_PER_PAGE);
-  const paginated = reports.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginated = reports.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="flex items-center gap-3 mb-6">
         <FaShieldAlt className="text-2xl text-indigo-600" />
-        <h1 className="text-3xl font-bold text-gray-800">ClamAV Scan Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-800 bg-blue-300 dark:bg-pink-300">
+          ClamAV Scan Dashboard
+        </h1>
+
+        <DarkModeToggle />
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -68,12 +78,18 @@ export default function Dashboard() {
             {paginated.map((r) => (
               <tr key={r.id} className="border-t">
                 <td className="px-6 py-4 font-medium">{r.vm_name}</td>
-                <td className="px-6 py-4">{new Date(r.timestamp).toLocaleString()}</td>
                 <td className="px-6 py-4">
-                  {r.report.includes('No threats') ? (
-                    <span className="text-green-600 font-semibold">✅ {r.report}</span>
+                  {new Date(r.timestamp).toLocaleString()}
+                </td>
+                <td className="px-6 py-4">
+                  {r.report.includes("No threats") ? (
+                    <span className="text-green-600 font-semibold">
+                      ✅ {r.report}
+                    </span>
                   ) : (
-                    <span className="text-red-600 font-semibold">❌ {r.report}</span>
+                    <span className="text-red-600 font-semibold">
+                      ❌ {r.report}
+                    </span>
                   )}
                 </td>
               </tr>
@@ -99,7 +115,9 @@ export default function Dashboard() {
             Page {currentPage} of {totalPages}
           </span>
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
