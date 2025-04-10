@@ -41,72 +41,83 @@ export default function Dashboard() {
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState("timestamp");
-const [sortOrder, setSortOrder] = useState("desc");
-
-const handleSort = (field) => {
-  if (sortField === field) {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  } else {
-    setSortField(field);
-    setSortOrder("asc");
-  }
-};
-
 
   useEffect(() => {
     setReports(mockReports);
   }, []);
 
-  const filteredReports = reports
-  .filter((r) =>
+  const filteredReports = reports.filter((r) =>
     r.vm_name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  .sort((a, b) => {
-    const aVal = sortField === "timestamp" ? new Date(a[sortField]) : a[sortField].toLowerCase();
-    const bVal = sortField === "timestamp" ? new Date(b[sortField]) : b[sortField].toLowerCase();
+  );
 
-    if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return <span className="ml-1">⇅</span>;
-    return sortOrder === "asc" ? (
-      <span className="ml-1">↑</span>
-    ) : (
-      <span className="ml-1">↓</span>
-    );
-  };
-  
   const totalPages = Math.ceil(filteredReports.length / ITEMS_PER_PAGE);
   const paginated = filteredReports.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
+  const highlightText = (text) => {
+    if (!searchTerm) return text;
+    const regex = new RegExp(`(${searchTerm})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <mark key={i} className="bg-yellow-300 px-1 rounded">{part}</mark>
+      ) : (
+        part
+      )
+    );
+  };
+
+  const exportToCSV = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      ["VM Name,Timestamp,Report"]
+        .concat(
+          filteredReports.map(
+            (r) =>
+              `"${r.vm_name}","${new Date(r.timestamp).toLocaleString()}","${r.report}"`
+          )
+        )
+        .join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "clamav_reports.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <FaShieldAlt className="text-2xl text-indigo-600" />
-        <h1 className="text-3xl font-bold text-gray-800 bg-blue-300 dark:bg-pink-300">
-          ClamAV Scan Dashboard
-        </h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <FaShieldAlt className="text-2xl text-indigo-600" />
+          <h1 className="text-3xl font-bold text-gray-800">ClamAV Scan Dashboard</h1>
+        </div>
         <DarkModeToggle />
       </div>
 
-      {/* 🔍 Search Bar */}
-      <div className="mb-4">
+      {/* 🔍 Search + Export */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <input
           type="text"
           placeholder="Search by VM name..."
-          className="w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
         />
+        <button
+          onClick={exportToCSV}
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          📥 Export CSV
+        </button>
       </div>
 
       {/* 📋 Table */}
@@ -117,40 +128,47 @@ const handleSort = (field) => {
               <th className="px-6 py-3 text-left">VM Name</th>
               <th className="px-6 py-3 text-left">Timestamp</th>
               <th className="px-6 py-3 text-left">Scan Report</th>
-              <th
-  className="px-6 py-3 text-left cursor-pointer"
-  onClick={() => handleSort("vm_name")}
->
-  VM Name <SortIcon field="vm_name" />
-</th>
-<th
-  className="px-6 py-3 text-left cursor-pointer"
-  onClick={() => handleSort("timestamp")}
->
-  Timestamp <SortIcon field="timestamp" />
-</th>
+              <th className="px-6 py-3 text-left">Threat Level</th>
             </tr>
           </thead>
           <tbody className="text-gray-700 text-sm">
-            {paginated.map((r) => (
-              <tr key={r.id} className="border-t">
-                <td className="px-6 py-4 font-medium">{r.vm_name}</td>
-                <td className="px-6 py-4">
-                  {new Date(r.timestamp).toLocaleString()}
-                </td>
-                <td className="px-6 py-4">
-                  {r.report.includes("No threats") ? (
-                    <span className="text-green-600 font-semibold">
-                      ✅ {r.report}
-                    </span>
-                  ) : (
-                    <span className="text-red-600 font-semibold">
-                      ❌ {r.report}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {paginated.map((r) => {
+              const isClean = r.report.includes("No threats");
+              return (
+                <tr key={r.id} className="border-t hover:bg-gray-50">
+                  <td className="px-6 py-4 font-medium">{highlightText(r.vm_name)}</td>
+                  <td className="px-6 py-4">{new Date(r.timestamp).toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    {isClean ? (
+                      <span className="text-green-600 font-semibold" title="No infected files found">
+                        ✅ {r.report}
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-semibold" title="Infected files detected">
+                        ❌ {r.report}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    {isClean ? (
+                      <span
+                        className="bg-green-200 text-green-800 text-xs font-semibold px-2 py-1 rounded"
+                        title="Safe"
+                      >
+                        Clean
+                      </span>
+                    ) : (
+                      <span
+                        className="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded"
+                        title="Risk Detected"
+                      >
+                        High Risk
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
