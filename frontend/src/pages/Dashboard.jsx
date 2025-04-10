@@ -41,15 +41,44 @@ export default function Dashboard() {
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState("timestamp");
+const [sortOrder, setSortOrder] = useState("desc");
+
+const handleSort = (field) => {
+  if (sortField === field) {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  } else {
+    setSortField(field);
+    setSortOrder("asc");
+  }
+};
+
 
   useEffect(() => {
     setReports(mockReports);
   }, []);
 
-  const filteredReports = reports.filter((r) =>
+  const filteredReports = reports
+  .filter((r) =>
     r.vm_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  )
+  .sort((a, b) => {
+    const aVal = sortField === "timestamp" ? new Date(a[sortField]) : a[sortField].toLowerCase();
+    const bVal = sortField === "timestamp" ? new Date(b[sortField]) : b[sortField].toLowerCase();
 
+    if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <span className="ml-1">⇅</span>;
+    return sortOrder === "asc" ? (
+      <span className="ml-1">↑</span>
+    ) : (
+      <span className="ml-1">↓</span>
+    );
+  };
+  
   const totalPages = Math.ceil(filteredReports.length / ITEMS_PER_PAGE);
   const paginated = filteredReports.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -88,6 +117,18 @@ export default function Dashboard() {
               <th className="px-6 py-3 text-left">VM Name</th>
               <th className="px-6 py-3 text-left">Timestamp</th>
               <th className="px-6 py-3 text-left">Scan Report</th>
+              <th
+  className="px-6 py-3 text-left cursor-pointer"
+  onClick={() => handleSort("vm_name")}
+>
+  VM Name <SortIcon field="vm_name" />
+</th>
+<th
+  className="px-6 py-3 text-left cursor-pointer"
+  onClick={() => handleSort("timestamp")}
+>
+  Timestamp <SortIcon field="timestamp" />
+</th>
             </tr>
           </thead>
           <tbody className="text-gray-700 text-sm">
