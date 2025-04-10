@@ -43,8 +43,12 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    setReports(mockReports);
+    fetch("http://localhost:8000/reports")
+      .then((res) => res.json())
+      .then((data) => setReports(data))
+      .catch((err) => console.error("Failed to fetch reports:", err));
   }, []);
+  
 
   const filteredReports = reports.filter((r) =>
     r.vm_name.toLowerCase().includes(searchTerm.toLowerCase())

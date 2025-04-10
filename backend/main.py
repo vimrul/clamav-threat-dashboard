@@ -3,11 +3,24 @@ from sqlalchemy.orm import Session
 from database import Base, engine, get_db
 from schemas import ScanReportCreate, ScanReport
 from crud import create_scan_report, get_all_reports, get_report_by_id
+from fastapi.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
-
+# ✅ Step 1: Initialize FastAPI app first
 app = FastAPI()
 
+# ✅ Step 2: Then add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace with your frontend URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ Step 3: Create database tables
+Base.metadata.create_all(bind=engine)
+
+# ✅ Routes
 @app.post("/report", response_model=ScanReport)
 def submit_report(report: ScanReportCreate, db: Session = Depends(get_db)):
     return create_scan_report(db, report)
