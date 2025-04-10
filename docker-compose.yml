@@ -36,6 +36,7 @@ services:
       - DB_PASS=${POSTGRES_PASSWORD}
     volumes:
       - ./backend:/app
+#      - reports-data:/app/reports  # ClamAV report output
 
   frontend:
     build: ./frontend
