@@ -17,6 +17,7 @@ services:
   backend:
     build: ./backend
     container_name: clamav-backend
+    restart: always
     command: >
       sh -c "while ! nc -z db 5432; do
         echo 'Waiting for PostgreSQL...';
@@ -36,5 +37,57 @@ services:
     volumes:
       - ./backend:/app
 
+  frontend:
+    build: ./frontend
+    container_name: clamav-frontend
+    restart: always
+    ports:
+      - "5173:80"  # Access via http://localhost:5173
+    depends_on:
+      - backend
+    networks:
+      - default
+
 volumes:
   pgdata:
+
+# version: "3.9"
+
+# services:
+#   db:
+#     image: postgres:15
+#     container_name: clamav-postgres
+#     restart: always
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       POSTGRES_USER: ${POSTGRES_USER}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#       POSTGRES_DB: ${POSTGRES_DB}
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+
+#   backend:
+#     build: ./backend
+#     container_name: clamav-backend
+#     command: >
+#       sh -c "while ! nc -z db 5432; do
+#         echo 'Waiting for PostgreSQL...';
+#         sleep 1;
+#       done;
+#       uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - db
+#     environment:
+#       - DB_HOST=db
+#       - DB_PORT=${POSTGRES_PORT}
+#       - DB_NAME=${POSTGRES_DB}
+#       - DB_USER=${POSTGRES_USER}
+#       - DB_PASS=${POSTGRES_PASSWORD}
+#     volumes:
+#       - ./backend:/app
+
+# volumes:
+#   pgdata:
