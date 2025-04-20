@@ -79,6 +79,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-white p-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
+        <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-md shadow" />
         <FaShieldAlt className="text-2xl text-indigo-600 dark:text-indigo-400" />
         <h1 className="text-3xl font-bold">ClamAV Scan Dashboard</h1>
         <DarkModeToggle />
