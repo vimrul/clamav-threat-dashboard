@@ -22,12 +22,13 @@ export default function Dashboard() {
   }, []);
 
   const fetchReports = () => {
+    const API_URL = import.meta.env.VITE_API_URL || "http://clamav-backend:8000";
+  
     axios
-      .get("http://localhost:8000/reports")
+      .get(`${API_URL}/reports`)
       .then((res) => setReports(res.data))
-      .catch((err) => console.error("Failed to fetch reports", err));
+      .catch((err) => console.error("❌ Failed to fetch reports:", err));
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
