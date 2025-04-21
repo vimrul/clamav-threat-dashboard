@@ -1,35 +1,35 @@
 #!/bin/bash
 
+# Load configuration
 CONFIG_FILE="/etc/clamav-agent.conf"
-
-if [ ! -f $CONFIG_FILE ]; then
-  echo "❌ Config file not found. Please run install_agent.sh first."
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo "❌ Config file not found at $CONFIG_FILE"
   exit 1
 fi
 
-source $CONFIG_FILE
-TMP_JSON="/tmp/clamav_report.json"
-VM_NAME=$(hostname)
-TIMESTAMP=$(date -Iseconds)
+source "$CONFIG_FILE"
+
+# Temp file for scan output
+SCAN_OUTPUT="/tmp/clamav-scan.txt"
+> "$SCAN_OUTPUT"
 
 echo "🛡️ Scanning in progress..."
 
-SCAN_RESULT=$(clamscan -r / --quiet 2>/dev/null)
+# Run the ClamAV scan
+clamscan -r / --bell -i > "$SCAN_OUTPUT"
 
-if [[ $SCAN_RESULT == *"Infected files: 0"* ]]; then
+# Parse threats
+INFECTED=$(grep "FOUND" "$SCAN_OUTPUT" | awk -F: '{print $1}' | tr '\n' ',' | sed 's/,$//')
+
+# Determine report message
+if [ -z "$INFECTED" ]; then
   REPORT="No threats found."
 else
-  INFECTED=$(echo "$SCAN_RESULT" | grep "FOUND" | awk '{print $1}' | tr '\n' ',' | sed 's/,$//')
   REPORT="Found threats in: $INFECTED"
 fi
 
-cat <<EOF > $TMP_JSON
-{
-  "vm_name": "$VM_NAME",
-  "timestamp": "$TIMESTAMP",
-  "report": "$REPORT"
-}
-EOF
-
-echo "📤 Sending report to $SERVER_URL..."
-curl -X POST -H "Content-Type: application/json" -d @$TMP_JSON "$SERVER_URL/report"
+# Send to dashboard
+echo "📤 Sending report to $SERVER..."
+curl -X POST "$SERVER/report" \
+  -H "Content-Type: application/json" \
+  -d "{\"vm_name\":\"$(hostname)\",\"report\":\"$REPORT\"}"
