@@ -13,7 +13,6 @@ export default function Dashboard() {
   const [sortField, setSortField] = useState("timestamp");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // 🆕 States for new report
   const [vmName, setVmName] = useState("");
   const [reportText, setReportText] = useState("");
 
@@ -22,15 +21,16 @@ export default function Dashboard() {
   }, []);
 
   const fetchReports = () => {
-    const API_URL = import.meta.env.VITE_API_URL || "http://clamav-backend:8000";
-  
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     axios
       .get(`${API_URL}/reports`)
       .then((res) => setReports(res.data))
       .catch((err) => console.error("❌ Failed to fetch reports:", err));
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
     const newReport = {
       vm_name: vmName,
@@ -39,7 +39,7 @@ export default function Dashboard() {
     };
 
     axios
-      .post("http://localhost:8000/report", newReport)
+      .post(`${API_URL}/report`, newReport)
       .then(() => {
         fetchReports();
         setVmName("");
@@ -78,15 +78,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-white p-6">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-md shadow" />
-        {/* <FaShieldAlt className="text-3xl font-bold text-gray-800 dark:text-white" /> */}
         <h1 className="text-3xl font-bold">ClamAV Scan Dashboard</h1>
         <DarkModeToggle />
       </div>
 
-      {/* 🔧 Add New Report Form */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow">
         <h2 className="text-xl font-semibold mb-4">📝 Submit New Report</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,7 +116,6 @@ export default function Dashboard() {
         </form>
       </div>
 
-      {/* ✅ Search Bar */}
       <div className="mb-4">
         <input
           type="text"
@@ -133,7 +129,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* 📋 Table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <table className="min-w-full table-auto">
           <thead className="bg-indigo-600 text-white text-sm uppercase">
@@ -165,7 +160,6 @@ export default function Dashboard() {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="mt-4 flex justify-between items-center text-sm">
         <p className="text-gray-600 dark:text-gray-400">
           Showing {paginated.length} of {filteredReports.length} reports
